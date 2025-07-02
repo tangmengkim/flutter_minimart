@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:ministore/provider/authProvider.dart';
+import 'package:ministore/views/auth/login.dart';
 import 'package:provider/provider.dart';
 
 // Example of a simple ChangeNotifier for runtime control
@@ -18,6 +20,7 @@ void main() {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RuntimeController()),
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
         // Add more providers here if needed
       ],
       child: const MyApp(),
@@ -59,8 +62,9 @@ class HomeWithTabs extends StatelessWidget {
           children: [
             Center(
               child: ElevatedButton(
-                onPressed: () =>
-                    context.read<RuntimeController>().toggleTheme(),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                ),
                 child: const Text('Toggle Theme'),
               ),
             ),

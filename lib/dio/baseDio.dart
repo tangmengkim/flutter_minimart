@@ -1,38 +1,54 @@
 import 'package:dio/dio.dart';
+import 'dart:developer';
 
-const String baseUrl = 'https://your-api-url.com/api';
-
-class DioService {
+class BaseDio {
+  // static String baseUrl = 'http://127.0.0.1:8000/api/v1';
+  static String baseUrl = 'http://minimart.ecotechkh.com/api/v1';
   final Dio _dio;
 
-  DioService()
+  static BaseDio? _instance;
+
+  BaseDio._()
       : _dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 10),
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+            },
           ),
         ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Log request
-          print('Request: ${options.method} ${options.path}');
+          // print('Request: ${options.method} ${options.path} ${options.data}');
+          log('Request: ${options.method} ${options.path} ${options.data}',
+              name: 'BaseDio');
           handler.next(options);
         },
         onResponse: (response, handler) {
-          // Log response
-          print('Response: ${response.statusCode}');
+          log('Response: ${response.statusCode} ${response.data}',
+              name: 'BaseDio');
+          log('Response: ${response.statusCode} ${response.data}',
+              name: 'BaseDio');
           handler.next(response);
         },
         onError: (e, handler) {
-          // Log error
-          print('Error: ${e.message}');
+          log('Error: ${e.message}', name: 'BaseDio');
           handler.next(e);
         },
       ),
     );
+  }
+
+  static BaseDio getInstance() {
+    _instance ??= BaseDio._();
+    return _instance!;
+  }
+
+  Dio getDio() {
+    return _dio;
   }
 
   Future<TRes> postRequest<TReq, TRes>({
