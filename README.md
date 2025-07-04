@@ -23,6 +23,8 @@ A simple Flutter-based mini e-commerce app.
   git clone https://github.com/yourusername/ministore.git
   cd ministore
   ```
+  Add your base URL in baseDio.dart 
+  ``` lib/dio/baseDio.dart ```
 2. Install dependencies:
   ```bash
   flutter pub get
