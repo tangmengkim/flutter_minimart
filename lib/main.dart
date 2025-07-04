@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ministore/provider/authProvider.dart';
-import 'package:ministore/views/auth/login.dart';
+import 'package:ministore/provider/productProvider.dart';
+import 'package:ministore/route_page.dart';
+import 'package:ministore/util/data.dart';
+import 'package:ministore/util/theme.dart';
 import 'package:provider/provider.dart';
 
 // Example of a simple ChangeNotifier for runtime control
@@ -15,12 +18,16 @@ class RuntimeController extends ChangeNotifier {
   }
 }
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RuntimeController()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+
         // Add more providers here if needed
       ],
       child: const MyApp(),
@@ -31,47 +38,28 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  Future<bool> _getAuthStatus() async {
+    return await Data().get<bool>(DataKeys.isUserAuth) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<RuntimeController>().isDarkMode;
-    return MaterialApp(
-      theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-      home: const HomeWithTabs(),
-    );
-  }
-}
-
-class HomeWithTabs extends StatelessWidget {
-  const HomeWithTabs({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2, // Number of tabs
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Provider Runtime Control'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Tab 1'),
-              Tab(text: 'Tab 2'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          children: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                ),
-                child: const Text('Toggle Theme'),
-              ),
-            ),
-            const Center(child: Text('Second Tab')),
-          ],
-        ),
-      ),
+    return FutureBuilder<bool>(
+      future: _getAuthStatus(),
+      builder: (context, snapshot) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          // theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
+          // home: isAuth ? const HomePage() : const LoginPage(),
+          // home: PageViewController(),
+          theme: AppThemes.lightTheme,
+          darkTheme: AppThemes.darkTheme,
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          initialRoute: pageHome,
+          onGenerateRoute: generateRoute,
+        );
+      },
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ministore/provider/authProvider.dart';
+import 'package:ministore/route_page.dart';
 import 'package:provider/provider.dart';
 
 // 3. Provider
@@ -23,10 +24,21 @@ class _LoginPageState extends State<LoginPage> {
   void _submit(BuildContext context) async {
     if (_formKey.currentState?.validate() ?? false) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      await authProvider.login(
-        _emailController.text.trim(),
-        _passwordController.text.trim(),
-      );
+      try {
+        await authProvider.login(
+          _emailController.text.trim(),
+          _passwordController.text.trim(),
+        );
+        print("ready for login");
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(pageHome, (route) => false);
+      } catch (e) {
+        // Handle any exceptions from the login method
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed!')),
+        );
+      }
+      if (!mounted) return;
     }
   }
 

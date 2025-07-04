@@ -14,7 +14,7 @@ class User {
   @JsonKey(name: 'shop_owner_id')
   final int? shopOwnerId;
   @JsonKey(name: 'is_active')
-  final int isActive;
+  final bool isActive;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
@@ -88,4 +88,24 @@ class LoginData {
   factory LoginData.fromJson(Map<String, dynamic> json) =>
       _$LoginDataFromJson(json);
   Map<String, dynamic> toJson() => _$LoginDataToJson(this);
+}
+
+@JsonSerializable(genericArgumentFactories: true)
+class ApiResponse<T> {
+  final bool success;
+  final String message;
+  final T data;
+
+  ApiResponse({
+    required this.success,
+    required this.message,
+    required this.data,
+  });
+
+  factory ApiResponse.fromJson(
+          Map<String, dynamic> json, T Function(Object? json) fromJsonT) =>
+      _$ApiResponseFromJson(json, fromJsonT);
+
+  Map<String, dynamic> toJson(Object? Function(T value) toJsonT) =>
+      _$ApiResponseToJson(this, toJsonT);
 }

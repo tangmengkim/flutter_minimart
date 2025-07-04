@@ -4,10 +4,10 @@ class AppThemes {
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light,
     primarySwatch: Colors.blue,
-    scaffoldBackgroundColor: Colors.white,
+    scaffoldBackgroundColor: Color(0xFFF5F5F5), // Light background color
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.blue,
-      foregroundColor: Colors.white,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
       elevation: 0,
     ),
     colorScheme: ColorScheme.fromSwatch().copyWith(
