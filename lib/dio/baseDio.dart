@@ -6,9 +6,7 @@ import 'package:ministore/util/data.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class BaseDio {
-  static String baseUrl =
-      'https://mini-mart-api-main-qocdxt.laravel.cloud/api/v1';
-  // static String baseUrl = 'http://minimart.ecotechkh.com/api/v1';
+  static String baseUrl = 'your base url';
   LoginData? _loginData;
   final Dio _dio;
 
