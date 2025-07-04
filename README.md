@@ -25,11 +25,12 @@ A simple Flutter-based mini e-commerce app.
   ```
 2. Add your base URL in baseDio.dart :
   ```bash
+  line 9 => static String baseUrl = 'your base url';
+  ```
+  ```bash
   lib/dio/baseDio.dart
   ```
 3. Install dependencies:
-  ``` static String baseUrl = 'your base url'; ```
-
   ```bash
   flutter pub get
   ```
