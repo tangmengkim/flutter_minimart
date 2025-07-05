@@ -29,7 +29,7 @@ abstract class ProductService {
   Future<Product> getProduct(@Path("id") String id);
 
   @GET("/products")
-  Future<ProductResponse> getProductsPaginated(@Query("page") int page);
+  Future<ListProductResponse> getProductsPaginated(@Query("page") int page);
 
   // Scan product by barcode
   @GET("/products/barcode/scan")
@@ -41,7 +41,7 @@ abstract class ProductService {
 
   // Update product (shop_owner)
   @PUT("/products/{id}")
-  Future<Product> updateProduct(
+  Future<ProductResponse> updateProduct(
     @Path("id") String id,
     @Body() Product body,
   );

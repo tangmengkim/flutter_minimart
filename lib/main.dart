@@ -6,6 +6,9 @@ import 'package:ministore/util/data.dart';
 import 'package:ministore/util/theme.dart';
 import 'package:provider/provider.dart';
 
+final RouteObserver<ModalRoute<void>> routeObserver =
+    RouteObserver<ModalRoute<void>>();
+
 // Example of a simple ChangeNotifier for runtime control
 class RuntimeController extends ChangeNotifier {
   bool _isDarkMode = false;
@@ -45,6 +48,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.watch<RuntimeController>().isDarkMode;
+    // final RouteObserver<ModalRoute<void>> routeObserver =
+    //     RouteObserver<ModalRoute<void>>();
+
     return FutureBuilder<bool>(
       future: _getAuthStatus(),
       builder: (context, snapshot) {
@@ -58,6 +64,7 @@ class MyApp extends StatelessWidget {
           themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
           initialRoute: pageHome,
           onGenerateRoute: generateRoute,
+          navigatorObservers: [routeObserver],
         );
       },
     );

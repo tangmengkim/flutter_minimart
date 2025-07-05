@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ministore/dio/models/product_model.dart';
+import 'package:ministore/main.dart';
 import 'package:ministore/provider/productProvider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:ministore/util/data.dart';
@@ -15,7 +16,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage> with RouteAware {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -47,7 +48,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+  void didUpdateWidget(covariant HomePage oldWidget) {
+    print("======>");
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void didChangeDependencies() {
+    print("========>didchange");
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     super.dispose();
@@ -113,15 +129,30 @@ class _HomePageState extends State<HomePage> {
                 // padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Consumer<ProductProvider>(
                   builder: (context, provider, _) => Padding(
-                    padding: EdgeInsets.all(8),
-                    child: CustomTextField(
-                      provider.searchController,
-                      'Search Products',
-                      keyboardType: TextInputType.text,
-                      prefixIcon: Icon(Icons.search),
-                      onChanged: (value) {
-                        provider.setSearch(value);
-                      },
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      spacing: 5,
+                      children: [
+                        Expanded(
+                          child: CustomTextField(
+                            provider.searchController,
+                            'Search Products',
+                            keyboardType: TextInputType.text,
+                            prefixIcon: Icon(Icons.search),
+                            onChanged: (value) {
+                              provider.setSearch(value);
+                            },
+                          ),
+                        ),
+                        GestureDetector(
+                            onTap: () =>
+                                Navigator.pushNamed(context, pageProductForm),
+                            child: Icon(
+                              Icons.add_to_photos,
+                              size: 40,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ))
+                      ],
                     ),
                   ),
                 ),
@@ -192,16 +223,48 @@ class _HomePageState extends State<HomePage> {
       endActionPane: ActionPane(
         extentRatio: 0.5,
         motion: const ScrollMotion(),
-        // dismissible: DismissiblePane(onDismissed: () {
-        //   // Optional: if you want to delete on full swipe
-        //   // deleteProduct(product);
-        // }),
+        dismissible: DismissiblePane(onDismissed: () async {
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Delete Product'),
+              content:
+                  Text('Are you sure you want to delete "${product.name}"?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: Text('Delete', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          );
 
+          if (confirmed == true) {
+            // Get provider before await
+            final productProvider = Provider.of<ProductProvider>(context, listen: false);
+
+            await productProvider.deleteProduct(product.id.toString());
+
+            // Check if widget is still mounted before using context
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${product.name} deleted')),
+              );
+            }
+          }
+        }),
         children: [
           SlidableAction(
             spacing: 10,
-            onPressed: (_) => Navigator.pushNamed(context, pageProductForm,
-                arguments: product),
+            onPressed: (_) => Navigator.pushNamed(
+              context,
+              pageProductForm,
+              arguments: product,
+            ),
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.black,
             icon: Icons.edit,
@@ -209,8 +272,36 @@ class _HomePageState extends State<HomePage> {
           ),
           SlidableAction(
             spacing: 10,
-            onPressed: (_) {
-              // Handle delete
+            onPressed: (_) async {
+              final provider =
+                  Provider.of<ProductProvider>(context, listen: false);
+
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text('Delete Product'),
+                  content: Text( 'Are you sure you want to delete "${product.name}"?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      child: Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      child: Text('Delete', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirmed == true) {
+                await provider.deleteProduct(product.id.toString());
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${product.name} deleted')),
+                  );
+                }
+              }
             },
             backgroundColor: Colors.transparent,
             foregroundColor: Colors.black,
@@ -223,6 +314,8 @@ class _HomePageState extends State<HomePage> {
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         child: ListTile(
           leading: CachedNetworkImage(
+            key: Key(product.id.toString()),
+            useOldImageOnUrlChange: true,
             imageUrl: product.imageUrl ?? '',
             placeholder: (context, url) => const CircularProgressIndicator(),
             errorWidget: (context, url, error) =>
@@ -233,6 +326,9 @@ class _HomePageState extends State<HomePage> {
           ),
           title: Text(product.name),
           subtitle: Text('\$${product.price}'),
+          trailing: GestureDetector(
+            child: Icon(Icons.add_shopping_cart_rounded,color: Theme.of(context).colorScheme.secondary,),
+          )
         ),
       ),
     );

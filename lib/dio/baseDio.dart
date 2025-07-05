@@ -6,7 +6,8 @@ import 'package:ministore/util/data.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 class BaseDio {
-  static String baseUrl = 'your base url';
+  static String baseUrl =
+      'https://mini-mart-api-main-qocdxt.laravel.cloud/api/v1';
   LoginData? _loginData;
   final Dio _dio;
 
@@ -16,8 +17,8 @@ class BaseDio {
       : _dio = Dio(
           BaseOptions(
             baseUrl: baseUrl,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
             headers: {
               'Content-Type': 'application/json',
             },
@@ -26,15 +27,21 @@ class BaseDio {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
+          setLoginData();
           // print('Request: ${options.method} ${options.path} ${options.data}');
           log('Request: ${options.method} ${options.path} ${options.data}',
               name: 'BaseDio');
+
           handler.next(options);
         },
         onResponse: (response, handler) {
           log('Response: ${response.statusCode} ${response.statusMessage} ${response.data}',
               name: 'BaseDio');
-          handler.next(response);
+          if (response.statusCode! <= 200 && response.statusCode! < 300) {
+            handler.next(response);
+          } else {
+            throw DioException(requestOptions: response.requestOptions);
+          }
         },
         onError: (e, handler) {
           handler.next(e);
@@ -120,9 +127,9 @@ class BaseDio {
   Future<void> setLoginData() async {
     _loginData = await Data()
         .get<LoginData>(DataKeys.userAuth, fromJson: LoginData.fromJson);
+    print("=========> ${_loginData?.token}");
     if (_loginData != null && _loginData!.token != null) {
       _dio.options.headers['Authorization'] = 'Bearer ${_loginData!.token}';
     }
-    print("=========> ${_loginData?.token}");
   }
 }

@@ -40,7 +40,8 @@ class ProductProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      ProductResponse res = await _service.getProductsPaginated(_currentPage);
+      ListProductResponse res =
+          await _service.getProductsPaginated(_currentPage);
       _products = res.data.data;
       _hasMore = res.data.currentPage < res.data.lastPage;
     } catch (e) {
@@ -62,7 +63,8 @@ class ProductProvider with ChangeNotifier {
 
     try {
       _currentPage++;
-      ProductResponse res = await _service.getProductsPaginated(_currentPage);
+      ListProductResponse res =
+          await _service.getProductsPaginated(_currentPage);
       final newProducts = res.data.data;
       _products.addAll(newProducts);
       _hasMore = res.data.currentPage < res.data.lastPage;
@@ -83,7 +85,9 @@ class ProductProvider with ChangeNotifier {
   Future<void> deleteProduct(String id) async {
     try {
       await _service.deleteProduct(id);
-      await fetchProducts();
+      // await fetchProducts();
+      _products.removeWhere((product) => product.id.toString() == id);
+      notifyListeners(); // Notify UI to update
     } catch (e) {
       print("Error deleting product: $e");
     }
@@ -119,7 +123,8 @@ class ProductProvider with ChangeNotifier {
     try {
       final updatedProduct = await _service.updateProduct(id, product);
       await fetchProducts();
-      return updatedProduct;
+      print("=========>update $updatedProduct");
+      return updatedProduct.data;
     } catch (e) {
       print("Error updating product: $e");
       return null;
