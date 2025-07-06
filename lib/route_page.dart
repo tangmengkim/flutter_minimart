@@ -4,6 +4,7 @@ import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/views/auth/login.dart';
 import 'package:ministore/views/home/cart_page.dart';
 import 'package:ministore/views/home/checkout_page.dart';
+import 'package:ministore/views/auth/change_password.dart';
 import 'package:ministore/views/home/page_view_controller.dart';
 import 'package:ministore/views/product/product_form_page.dart';
 import 'package:ministore/views/profile/profile_page.dart';
@@ -15,6 +16,7 @@ const String productPageRoute = '/product';
 
 const String pageProfile = '/profile';
 const String pageProductForm = '/product_form_page.dart';
+const String pageChangePassword = '/change_password';
 
 const String pageCart = '/cart_page.dart';
 const String pageCheckout = '/checkout_page.dart';
@@ -42,6 +44,15 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         return CartPage();
       case pageCheckout:
         return CheckoutPage();
+      case pageChangePassword:
+        return ChangePasswordPage();
+
+      // case productPageRoute:
+      //   final args = settings.arguments as int?;
+      //   return MaterialPageRoute(builder: (_) => ProductPage(productId: args));
+      // case cartPageRoute:
+      //   final args = settings.arguments as String?;
+      //   return MaterialPageRoute(builder: (_) => CartPage(userId: args));
 
       default:
         return Scaffold(

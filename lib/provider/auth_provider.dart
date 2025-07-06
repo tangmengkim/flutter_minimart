@@ -123,7 +123,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await BaseDio().post(
-        '/api/v1/forgot-password',
+        '/forgot-password',
         data: {'email': email},
       );
 
@@ -167,7 +167,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await BaseDio().post(
-        '/api/v1/verify-otp',
+        '/verify-otp',
         data: {
           'email': _resetEmail,
           'otp': otp,
@@ -217,7 +217,7 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await BaseDio().post(
-        '/api/v1/reset-password',
+        '/reset-password',
         data: {
           'email': _resetEmail,
           'otp': otp,
@@ -390,6 +390,70 @@ class AuthProvider with ChangeNotifier {
       return authData?.token;
     } catch (e) {
       return null;
+    }
+  }
+
+  Future<bool> changePassword(
+    String currentPassword,
+    String newPassword,
+    String confirmPassword,
+  ) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await BaseDio().post(
+        '/change-password',
+        data: {
+          'current_password': currentPassword,
+          'password': newPassword,
+          'password_confirmation': confirmPassword,
+        },
+      );
+
+      if (response.statusCode == 200 && response.data['success']) {
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        _error = response.data['message'] ?? 'Failed to change password';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        final errorData = e.response?.data;
+
+        // Handle validation errors
+        if (e.response?.statusCode == 422 && errorData != null) {
+          if (errorData['errors'] != null) {
+            // Extract first validation error
+            final errors = errorData['errors'] as Map<String, dynamic>;
+            final firstError = errors.values.first;
+            if (firstError is List && firstError.isNotEmpty) {
+              _error = firstError.first.toString();
+            } else {
+              _error = 'Validation error occurred';
+            }
+          } else {
+            _error = errorData['message'] ?? 'Validation error occurred';
+          }
+        } else {
+          _error = errorData?['message'] ?? 'Failed to change password';
+        }
+      } else {
+        _error = 'Network error. Please try again.';
+      }
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _error = 'An unexpected error occurred';
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 
