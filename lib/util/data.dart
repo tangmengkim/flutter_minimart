@@ -8,6 +8,8 @@ class DataKeys {
   static const String userInfo = 'user_info';
   static const String isUserAuth = 'is_user_auth';
   static const String userAuth = 'user_auth';
+
+  static const String cartItems = 'cartItems';
 }
 
 class Data {

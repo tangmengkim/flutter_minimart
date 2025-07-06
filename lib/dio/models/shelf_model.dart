@@ -11,6 +11,9 @@ class Shelf {
   @JsonKey(name: 'is_active')
   final bool isActive;
 
+  @JsonKey(name: 'level')
+  final int level;
+
   @JsonKey(name: 'created_at')
   final String createdAt;
 
@@ -25,6 +28,7 @@ class Shelf {
     required this.name,
     required this.description,
     required this.isActive,
+    required this.level,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,

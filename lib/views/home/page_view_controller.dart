@@ -1,6 +1,7 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:ministore/dio/models/auth_model.dart';
+import 'package:ministore/views/home/cart_page.dart';
 import 'package:ministore/views/home/custom_bottom_appBar.dart';
 import 'package:ministore/views/home/home_page.dart';
 
@@ -20,7 +21,7 @@ class _PageViewControllerState extends State<PageViewController> {
 
   final List<Widget> _pages = [
     HomePage(),
-    Center(child: Text('Page 2', style: TextStyle(fontSize: 24))),
+    CartPage(),
     Center(child: Text('Page 3', style: TextStyle(fontSize: 24))),
   ];
 

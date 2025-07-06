@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ministore/provider/productProvider.dart';
+import 'package:ministore/provider/product_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:ministore/dio/models/product_model.dart';
 import 'package:ministore/dio/models/category_model.dart';

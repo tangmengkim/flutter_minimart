@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:ministore/dio/baseDio.dart';
 import 'package:ministore/dio/models/shelf_model.dart';
+import 'package:ministore/dio/models/shelve_model.dart';
 import 'package:retrofit/retrofit.dart';
 
 part 'shelves_service.g.dart';
@@ -18,7 +19,7 @@ abstract class ShelvesService {
 
   // Get shelf details
   @GET("/shelves/{id}")
-  Future<Shelf> getShelfById(@Path("id") String id);
+  Future<Shelve> getShelfById(@Path("id") String id);
 
   // Create shelf
   @POST("/shelves")

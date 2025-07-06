@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ministore/dio/models/product_model.dart';
 import 'package:ministore/main.dart';
-import 'package:ministore/provider/productProvider.dart';
+import 'package:ministore/provider/card_provider.dart';
+import 'package:ministore/provider/product_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:ministore/util/data.dart';
 import 'package:ministore/views/widgets/customTextField.dart';
+import 'package:ministore/views/widgets/product_detail_buttomSheet.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -310,25 +312,49 @@ class _HomePageState extends State<HomePage> with RouteAware {
           ),
         ],
       ),
-      child: Card(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        child: ListTile(
-          leading: CachedNetworkImage(
-            key: Key(product.id.toString()),
-            useOldImageOnUrlChange: true,
-            imageUrl: product.imageUrl ?? '',
-            placeholder: (context, url) => const CircularProgressIndicator(),
-            errorWidget: (context, url, error) =>
-                Image.asset('assets/images/product_icon.png'),
-            width: 50,
-            height: 50,
-            fit: BoxFit.cover,
+      child: GestureDetector(
+        onTap: () {
+          final cart = context.read<CartProvider>();
+          final isInCart = cart.items.any((item) => item.product.id == product.id);
+          final existingQty = isInCart ? cart.items
+                  .firstWhere((item) => item.product.id == product.id)
+                  .quantity : 1;
+
+          showProductDetailBottomSheet(
+            context: context,
+            product: product,
+            initialQty: existingQty,
+            isUpdate: isInCart,
+            onQuantityChanged: (qty) {
+              if (isInCart) {
+                cart.updateQty(product, qty);
+              } else {
+                cart.addToCartWithQty(product, qty);
+              }
+            },
+          );
+
+        },
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: ListTile(
+            leading: CachedNetworkImage(
+              key: Key(product.id.toString()),
+              useOldImageOnUrlChange: true,
+              imageUrl: product.imageUrl ?? '',
+              placeholder: (context, url) => const CircularProgressIndicator(),
+              errorWidget: (context, url, error) =>
+                  Image.asset('assets/images/product_icon.png'),
+              width: 50,
+              height: 50,
+              fit: BoxFit.cover,
+            ),
+            title: Text(product.name),
+            subtitle: Text('\$${product.price}'),
+            trailing: GestureDetector(
+              child: Icon(Icons.add_shopping_cart_rounded,color: Theme.of(context).colorScheme.secondary,),
+            )
           ),
-          title: Text(product.name),
-          subtitle: Text('\$${product.price}'),
-          trailing: GestureDetector(
-            child: Icon(Icons.add_shopping_cart_rounded,color: Theme.of(context).colorScheme.secondary,),
-          )
         ),
       ),
     );

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ministore/provider/authProvider.dart';
+import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:provider/provider.dart';
 
