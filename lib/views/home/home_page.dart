@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ministore/dio/models/product_model.dart';
 import 'package:ministore/main.dart';
-import 'package:ministore/provider/card_provider.dart';
+import 'package:ministore/provider/cart_provider.dart';
 import 'package:ministore/provider/product_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:ministore/util/data.dart';
