@@ -1,11 +1,10 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:ministore/dio/models/sale/sale_item_model.dart';
 
 part 'sale_req_model.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 class SaleRequest {
-  final List<SaleItem> items;
+  final List<SaleRequestItem> items;
 
   @JsonKey(name: 'payment_method')
   final String paymentMethod;
@@ -20,6 +19,24 @@ class SaleRequest {
     this.discount,
   });
 
-  factory SaleRequest.fromJson(Map<String, dynamic> json) => _$SaleRequestFromJson(json);
+  factory SaleRequest.fromJson(Map<String, dynamic> json) =>
+      _$SaleRequestFromJson(json);
   Map<String, dynamic> toJson() => _$SaleRequestToJson(this);
+}
+
+@JsonSerializable()
+class SaleRequestItem {
+  @JsonKey(name: 'product_id')
+  final int productId;
+
+  final int quantity;
+
+  SaleRequestItem({
+    required this.productId,
+    required this.quantity,
+  });
+
+  factory SaleRequestItem.fromJson(Map<String, dynamic> json) =>
+      _$SaleRequestItemFromJson(json);
+  Map<String, dynamic> toJson() => _$SaleRequestItemToJson(this);
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ministore/dio/models/card_item_model.dart';
-import 'package:ministore/provider/card_provider.dart';
+import 'package:ministore/dio/models/cart_item_model.dart';
+import 'package:ministore/provider/cart_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:provider/provider.dart';
 
@@ -25,7 +25,7 @@ class CartPage extends StatelessWidget {
                   title: Text(item.product.name),
                   subtitle: Text('Qty: ${item.quantity}'),
                   trailing: Text(
-                    '\$${(double.tryParse(item.product.price) ?? 0) * item.quantity}',
+                    '\$${(double.tryParse(item.product.price as String) ?? 0) * item.quantity}',
                   ),
                   onTap: () {
                     showModalBottomSheet(
@@ -54,7 +54,7 @@ class CartPage extends StatelessWidget {
               );
             }
           },
-          child: Text('Checkout (\$${cart.total.toStringAsFixed(2)})'),
+          child: Text('Checkout (\$${cart.total})'),
         ),
       ),
     );

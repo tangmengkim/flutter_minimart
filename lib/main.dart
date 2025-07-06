@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ministore/provider/auth_provider.dart';
-import 'package:ministore/provider/card_provider.dart';
+import 'package:ministore/provider/cart_provider.dart';
 import 'package:ministore/provider/product_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:ministore/util/data.dart';
