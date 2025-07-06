@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ministore/provider/authProvider.dart';
+import 'package:ministore/provider/auth_provider.dart';
+import 'package:ministore/main.dart'; // Import for RuntimeController
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -115,20 +116,48 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Reset Password'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(
+            Icons.arrow_back,
+            color: Theme.of(context).iconTheme.color,
+          ),
           onPressed: () {
             Provider.of<AuthProvider>(context, listen: false)
                 .clearForgotPasswordState();
             Navigator.of(context).pop();
           },
         ),
+        actions: [
+          // Theme toggle button
+          Consumer<RuntimeController>(
+            builder: (context, themeController, _) {
+              return IconButton(
+                onPressed: themeController.toggleTheme,
+                icon: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Icon(
+                    themeController.isDarkMode
+                        ? Icons.light_mode
+                        : Icons.dark_mode,
+                    key: ValueKey(themeController.isDarkMode),
+                    color: Theme.of(context).iconTheme.color,
+                  ),
+                ),
+                tooltip: themeController.isDarkMode
+                    ? 'Switch to Light Mode'
+                    : 'Switch to Dark Mode',
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -137,16 +166,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             builder: (context, auth, child) {
               // Show password reset form
               if (_showResetForm) {
-                return _buildResetPasswordForm(auth);
+                return _buildResetPasswordForm(auth, isDarkMode);
               }
 
               // Show OTP verification form
               if (auth.awaitingOtp) {
-                return _buildOtpVerificationForm(auth);
+                return _buildOtpVerificationForm(auth, isDarkMode);
               }
 
               // Show email input form
-              return _buildEmailForm(auth);
+              return _buildEmailForm(auth, isDarkMode);
             },
           ),
         ),
@@ -154,476 +183,692 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     );
   }
 
-  Widget _buildEmailForm(AuthProvider auth) {
+  Widget _buildEmailForm(AuthProvider auth, bool isDarkMode) {
     return Card(
-      elevation: 8,
+      elevation: isDarkMode ? 4 : 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _emailFormKey,
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.lock_reset,
-                  size: 48,
-                  color: Colors.blue.shade600,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Text(
-                'Forgot Password?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-              ),
-              const SizedBox(height: 8),
-
-              Text(
-                'Don\'t worry! Enter your email address and we\'ll send you a verification code to reset your password.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                      height: 1.4,
-                    ),
-              ),
-              const SizedBox(height: 32),
-
-              // Email Field
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email Address',
-                  hintText: 'Enter your email',
-                  prefixIcon: const Icon(Icons.email_outlined),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.blue.shade600, width: 2),
-                  ),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                      .hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Error Message
-              if (auth.error != null) _buildErrorCard(auth.error!),
-
-              // Send OTP Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: auth.isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(),
-                      )
-                    : ElevatedButton(
-                        onPressed: _sendOtp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue.shade600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: const Text(
-                          'Send Verification Code',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Back to Login
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_back, size: 18, color: Colors.grey[600]),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Back to Login',
-                      style: TextStyle(color: Colors.grey[600]),
-                    ),
+      color: Theme.of(context).cardColor,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: isDarkMode
+              ? null
+              : LinearGradient(
+                  colors: [
+                    Theme.of(context).cardColor,
+                    Theme.of(context).cardColor.withOpacity(0.8),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-              ),
-            ],
-          ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildOtpVerificationForm(AuthProvider auth) {
-    return Card(
-      elevation: 8,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _otpFormKey,
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.shade50,
-                  shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _emailFormKey,
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.lock_reset,
+                    size: 48,
+                    color: Theme.of(context).primaryColor,
+                  ),
                 ),
-                child: Icon(
-                  Icons.mark_email_read_outlined,
-                  size: 48,
-                  color: Colors.green.shade600,
+                const SizedBox(height: 24),
+
+                Text(
+                  'Forgot Password?',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.headlineSmall?.color,
+                      ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
-              Text(
-                'Check Your Email',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-              ),
-              const SizedBox(height: 8),
-
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
+                Text(
+                  'Don\'t worry! Enter your email address and we\'ll send you a verification code to reset your password.',
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[600],
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withOpacity(0.7),
                         height: 1.4,
                       ),
+                ),
+                const SizedBox(height: 32),
+
+                // Email Field
+                TextFormField(
+                  controller: _emailController,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Email Address',
+                    hintText: 'Enter your email',
+                    labelStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.email_outlined,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                          color: Theme.of(context).primaryColor, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Theme.of(context).cardColor
+                        : Colors.grey.shade50,
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter your email';
+                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                        .hasMatch(value)) {
+                      return 'Please enter a valid email';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Error Message
+                if (auth.error != null)
+                  _buildErrorCard(auth.error!, isDarkMode),
+
+                // Send OTP Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: auth.isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: Theme.of(context).primaryColor,
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: _sendOtp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: isDarkMode ? 2 : 4,
+                          ),
+                          child: const Text(
+                            'Send Verification Code',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Back to Login
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.arrow_back,
+                        size: 18,
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withOpacity(0.7),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Back to Login',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOtpVerificationForm(AuthProvider auth, bool isDarkMode) {
+    return Card(
+      elevation: isDarkMode ? 4 : 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: Theme.of(context).cardColor,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: isDarkMode
+              ? null
+              : LinearGradient(
+                  colors: [
+                    Theme.of(context).cardColor,
+                    Theme.of(context).cardColor.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _otpFormKey,
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.mark_email_read_outlined,
+                    size: 48,
+                    color: Colors.green.shade600,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  'Check Your Email',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.headlineSmall?.color,
+                      ),
+                ),
+                const SizedBox(height: 8),
+
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.color
+                              ?.withOpacity(0.7),
+                          height: 1.4,
+                        ),
+                    children: [
+                      const TextSpan(
+                          text: 'We\'ve sent a 6-digit verification code to\n'),
+                      TextSpan(
+                        text: _emailController.text,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+
+                // OTP Field
+                TextFormField(
+                  controller: _otpController,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 8,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Verification Code',
+                    hintText: '000000',
+                    labelStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.security,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          BorderSide(color: Colors.green.shade600, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Theme.of(context).cardColor
+                        : Colors.grey.shade50,
+                    counterText: '',
+                  ),
+                  keyboardType: TextInputType.number,
+                  maxLength: 6,
+                  textAlign: TextAlign.center,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the verification code';
+                    }
+                    if (value.length != 6) {
+                      return 'Verification code must be 6 digits';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Error Message
+                if (auth.error != null)
+                  _buildErrorCard(auth.error!, isDarkMode),
+
+                // Verify Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: auth.isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.green.shade600,
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: _verifyOtp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: isDarkMode ? 2 : 4,
+                          ),
+                          child: const Text(
+                            'Verify Code',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                ),
+
+                const SizedBox(height: 16),
+
+                // Resend OTP
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const TextSpan(
-                        text: 'We\'ve sent a 6-digit verification code to\n'),
-                    TextSpan(
-                      text: _emailController.text,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    Text(
+                      'Didn\'t receive the code? ',
+                      style: TextStyle(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withOpacity(0.7),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: auth.isLoading ? null : _resendOtp,
+                      child: Text(
+                        'Resend',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green.shade600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 32),
-
-              // OTP Field
-              TextFormField(
-                controller: _otpController,
-                decoration: InputDecoration(
-                  labelText: 'Verification Code',
-                  hintText: '000000',
-                  prefixIcon: const Icon(Icons.security),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.green.shade600, width: 2),
-                  ),
-                  counterText: '',
-                ),
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 8,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter the verification code';
-                  }
-                  if (value.length != 6) {
-                    return 'Verification code must be 6 digits';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Error Message
-              if (auth.error != null) _buildErrorCard(auth.error!),
-
-              // Verify Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: auth.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                        onPressed: _verifyOtp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green.shade600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: const Text(
-                          'Verify Code',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // Resend OTP
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Didn\'t receive the code? ',
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                  TextButton(
-                    onPressed: auth.isLoading ? null : _resendOtp,
-                    child: const Text(
-                      'Resend',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildResetPasswordForm(AuthProvider auth) {
+  Widget _buildResetPasswordForm(AuthProvider auth, bool isDarkMode) {
     return Card(
-      elevation: 8,
+      elevation: isDarkMode ? 4 : 8,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Form(
-          key: _resetFormKey,
-          child: Column(
-            children: [
-              // Header
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade50,
-                  shape: BoxShape.circle,
+      color: Theme.of(context).cardColor,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: isDarkMode
+              ? null
+              : LinearGradient(
+                  colors: [
+                    Theme.of(context).cardColor,
+                    Theme.of(context).cardColor.withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                child: Icon(
-                  Icons.lock_outline,
-                  size: 48,
-                  color: Colors.purple.shade600,
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              Text(
-                'Create New Password',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
-                    ),
-              ),
-              const SizedBox(height: 8),
-
-              Text(
-                'Your password must be at least 8 characters long and include a mix of letters and numbers.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                      height: 1.4,
-                    ),
-              ),
-              const SizedBox(height: 32),
-
-              // New Password Field
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  hintText: 'Enter new password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _resetFormKey,
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.purple.shade600, width: 2),
+                  child: Icon(
+                    Icons.lock_outline,
+                    size: 48,
+                    color: Colors.purple.shade600,
                   ),
                 ),
-                obscureText: _obscurePassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
-                  }
-                  if (value.length < 8) {
-                    return 'Password must be at least 8 characters';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 24),
 
-              // Confirm Password Field
-              TextFormField(
-                controller: _confirmPasswordController,
-                decoration: InputDecoration(
-                  labelText: 'Confirm Password',
-                  hintText: 'Re-enter new password',
-                  prefixIcon: const Icon(Icons.lock_outline),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscureConfirmPassword = !_obscureConfirmPassword;
-                      });
-                    },
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide:
-                        BorderSide(color: Colors.purple.shade600, width: 2),
-                  ),
-                ),
-                obscureText: _obscureConfirmPassword,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
-                  }
-                  if (value != _passwordController.text) {
-                    return 'Passwords do not match';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
-
-              // Error Message
-              if (auth.error != null) _buildErrorCard(auth.error!),
-
-              // Reset Password Button
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: auth.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ElevatedButton(
-                        onPressed: _resetPassword,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.shade600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        child: const Text(
-                          'Reset Password',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                Text(
+                  'Create New Password',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).textTheme.headlineSmall?.color,
                       ),
-              ),
-            ],
+                ),
+                const SizedBox(height: 8),
+
+                Text(
+                  'Your password must be at least 8 characters long and include a mix of letters and numbers.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.color
+                            ?.withOpacity(0.7),
+                        height: 1.4,
+                      ),
+                ),
+                const SizedBox(height: 32),
+
+                // New Password Field
+                TextFormField(
+                  controller: _passwordController,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'New Password',
+                    hintText: 'Enter new password',
+                    labelStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          BorderSide(color: Colors.purple.shade600, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Theme.of(context).cardColor
+                        : Colors.grey.shade50,
+                  ),
+                  obscureText: _obscurePassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter a password';
+                    }
+                    if (value.length < 8) {
+                      return 'Password must be at least 8 characters';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+
+                // Confirm Password Field
+                TextFormField(
+                  controller: _confirmPasswordController,
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    hintText: 'Re-enter new password',
+                    labelStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.7),
+                    ),
+                    hintStyle: TextStyle(
+                      color: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.color
+                          ?.withOpacity(0.5),
+                    ),
+                    prefixIcon: Icon(
+                      Icons.lock_outline,
+                      color: Theme.of(context).iconTheme.color,
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureConfirmPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscureConfirmPassword = !_obscureConfirmPassword;
+                        });
+                      },
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).dividerColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          BorderSide(color: Colors.purple.shade600, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: isDarkMode
+                        ? Theme.of(context).cardColor
+                        : Colors.grey.shade50,
+                  ),
+                  obscureText: _obscureConfirmPassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please confirm your password';
+                    }
+                    if (value != _passwordController.text) {
+                      return 'Passwords do not match';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+
+                // Error Message
+                if (auth.error != null)
+                  _buildErrorCard(auth.error!, isDarkMode),
+
+                // Reset Password Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: auth.isLoading
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.purple.shade600,
+                          ),
+                        )
+                      : ElevatedButton(
+                          onPressed: _resetPassword,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.purple.shade600,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: isDarkMode ? 2 : 4,
+                          ),
+                          child: const Text(
+                            'Reset Password',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildErrorCard(String error) {
+  Widget _buildErrorCard(String error, bool isDarkMode) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
-        border: Border.all(color: Colors.red.shade200),
+        color: isDarkMode ? Colors.red.withOpacity(0.1) : Colors.red.shade50,
+        border: Border.all(
+            color:
+                isDarkMode ? Colors.red.withOpacity(0.3) : Colors.red.shade200),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red.shade600, size: 20),
+          Icon(Icons.error_outline,
+              color: isDarkMode ? Colors.red.shade300 : Colors.red.shade600,
+              size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               error,
               style: TextStyle(
-                color: Colors.red.shade700,
+                color: isDarkMode ? Colors.red.shade300 : Colors.red.shade700,
                 fontSize: 14,
               ),
             ),
