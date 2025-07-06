@@ -4,6 +4,7 @@ import 'package:ministore/dio/models/auth_model.dart';
 import 'package:ministore/views/home/cart_page.dart';
 import 'package:ministore/views/home/custom_bottom_appBar.dart';
 import 'package:ministore/views/home/home_page.dart';
+import 'package:ministore/views/profile/profile_page.dart';
 
 class PageViewController extends StatefulWidget {
   const PageViewController({Key? key}) : super(key: key);
@@ -19,11 +20,7 @@ class _PageViewControllerState extends State<PageViewController> {
 
   int _currentPage = 0;
 
-  final List<Widget> _pages = [
-    HomePage(),
-    CartPage(),
-    Center(child: Text('Page 3', style: TextStyle(fontSize: 24))),
-  ];
+  final List<Widget> _pages = [HomePage(), CartPage(), ProfilePage()];
 
   @override
   void initState() {

@@ -204,6 +204,29 @@ class _HomePageState extends State<HomePage> with RouteAware {
         title: Text('Mini Store'),
       ),
       actions: [
+        // Dark Mode Toggle Button
+        Consumer<RuntimeController>(
+          builder: (context, themeController, _) {
+            return IconButton.outlined(
+              onPressed: () {
+                themeController.toggleTheme();
+              },
+              icon: AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: Icon(
+                  themeController.isDarkMode
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                  key: ValueKey(themeController.isDarkMode),
+                ),
+              ),
+              tooltip: themeController.isDarkMode
+                  ? 'Switch to Light Mode'
+                  : 'Switch to Dark Mode',
+            );
+          },
+        ),
+        // Profile/Login Button
         IconButton.outlined(
             onPressed: () async {
               print('Cart button pressed');
@@ -247,7 +270,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
           if (confirmed == true) {
             // Get provider before await
-            final productProvider = Provider.of<ProductProvider>(context, listen: false);
+            final productProvider =
+                Provider.of<ProductProvider>(context, listen: false);
 
             await productProvider.deleteProduct(product.id.toString());
 
@@ -282,7 +306,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
                 context: context,
                 builder: (ctx) => AlertDialog(
                   title: Text('Delete Product'),
-                  content: Text( 'Are you sure you want to delete "${product.name}"?'),
+                  content: Text(
+                      'Are you sure you want to delete "${product.name}"?'),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, false),
@@ -290,7 +315,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: Text('Delete', style: TextStyle(color: Colors.red)),
+                      child:
+                          Text('Delete', style: TextStyle(color: Colors.red)),
                     ),
                   ],
                 ),
@@ -315,10 +341,13 @@ class _HomePageState extends State<HomePage> with RouteAware {
       child: GestureDetector(
         onTap: () {
           final cart = context.read<CartProvider>();
-          final isInCart = cart.items.any((item) => item.product.id == product.id);
-          final existingQty = isInCart ? cart.items
+          final isInCart =
+              cart.items.any((item) => item.product.id == product.id);
+          final existingQty = isInCart
+              ? cart.items
                   .firstWhere((item) => item.product.id == product.id)
-                  .quantity : 1;
+                  .quantity
+              : 1;
 
           showProductDetailBottomSheet(
             context: context,
@@ -333,28 +362,30 @@ class _HomePageState extends State<HomePage> with RouteAware {
               }
             },
           );
-
         },
         child: Card(
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           child: ListTile(
-            leading: CachedNetworkImage(
-              key: Key(product.id.toString()),
-              useOldImageOnUrlChange: true,
-              imageUrl: product.imageUrl ?? '',
-              placeholder: (context, url) => const CircularProgressIndicator(),
-              errorWidget: (context, url, error) =>
-                  Image.asset('assets/images/product_icon.png'),
-              width: 50,
-              height: 50,
-              fit: BoxFit.cover,
-            ),
-            title: Text(product.name),
-            subtitle: Text('\$${product.price}'),
-            trailing: GestureDetector(
-              child: Icon(Icons.add_shopping_cart_rounded,color: Theme.of(context).colorScheme.secondary,),
-            )
-          ),
+              leading: CachedNetworkImage(
+                key: Key(product.id.toString()),
+                useOldImageOnUrlChange: true,
+                imageUrl: product.imageUrl ?? '',
+                placeholder: (context, url) =>
+                    const CircularProgressIndicator(),
+                errorWidget: (context, url, error) =>
+                    Image.asset('assets/images/product_icon.png'),
+                width: 50,
+                height: 50,
+                fit: BoxFit.cover,
+              ),
+              title: Text(product.name),
+              subtitle: Text('\$${product.price}'),
+              trailing: GestureDetector(
+                child: Icon(
+                  Icons.add_shopping_cart_rounded,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+              )),
         ),
       ),
     );

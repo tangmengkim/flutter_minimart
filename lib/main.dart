@@ -17,7 +17,19 @@ class RuntimeController extends ChangeNotifier {
   bool get isDarkMode => _isDarkMode;
 
   void toggleTheme() {
-    _isDarkMode = !_isDarkMode;
+    _isDarkMode = !_isDarkMode; // Fixed syntax error here
+    notifyListeners();
+  }
+
+  // Optional: Set initial theme based on system preference
+  void setInitialTheme(bool isDark) {
+    _isDarkMode = isDark;
+    notifyListeners();
+  }
+
+  // Optional: Method to set theme explicitly
+  void setTheme(bool isDark) {
+    _isDarkMode = isDark;
     notifyListeners();
   }
 }
@@ -31,8 +43,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => RuntimeController()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
-        ChangeNotifierProvider(create: (_) => CartProvider()), 
-
+        ChangeNotifierProvider(create: (_) => CartProvider()),
         // Add more providers here if needed
       ],
       child: const MyApp(),
@@ -49,24 +60,24 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = context.watch<RuntimeController>().isDarkMode;
-    // final RouteObserver<ModalRoute<void>> routeObserver =
-    //     RouteObserver<ModalRoute<void>>();
-
-    return FutureBuilder<bool>(
-      future: _getAuthStatus(),
-      builder: (context, snapshot) {
-        return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          // theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
-          // home: isAuth ? const HomePage() : const LoginPage(),
-          // home: PageViewController(),
-          theme: AppThemes.lightTheme,
-          darkTheme: AppThemes.darkTheme,
-          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          initialRoute: pageHome,
-          onGenerateRoute: generateRoute,
-          navigatorObservers: [routeObserver],
+    // Listen to theme changes from RuntimeController
+    return Consumer<RuntimeController>(
+      builder: (context, themeController, _) {
+        return FutureBuilder<bool>(
+          future: _getAuthStatus(),
+          builder: (context, snapshot) {
+            return MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Mini Store',
+              theme: AppThemes.lightTheme,
+              darkTheme: AppThemes.darkTheme,
+              themeMode:
+                  themeController.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              initialRoute: pageHome,
+              onGenerateRoute: generateRoute,
+              navigatorObservers: [routeObserver],
+            );
+          },
         );
       },
     );
