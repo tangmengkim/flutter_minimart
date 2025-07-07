@@ -20,10 +20,10 @@ class Shelve {
   final String updatedAt;
   @JsonKey(name: 'deleted_at')
   final String? deletedAt;
-  final Section section;
+  final Section? section;
   
   @JsonKey(defaultValue: [])
-  final List<Product> products;
+  final List<Product>? products;
 
   Shelve({
     required this.id,
@@ -35,8 +35,8 @@ class Shelve {
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
-    required this.section,
-    required this.products,
+    this.section,
+    this.products,
   });
 
   factory Shelve.fromJson(Map<String, dynamic> json) => _$ShelveFromJson(json);

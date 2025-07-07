@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ministore/dio/models/product_model.dart';
+import 'package:ministore/dio/models/section_model.dart';
+import 'package:ministore/dio/services/section_service.dart';
 import 'package:ministore/main.dart';
 import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/provider/cart_provider.dart';
@@ -9,6 +11,7 @@ import 'package:ministore/route_page.dart';
 import 'package:ministore/util/data.dart';
 import 'package:ministore/views/widgets/customTextField.dart';
 import 'package:ministore/views/widgets/product_detail_buttomSheet.dart';
+import 'package:ministore/views/widgets/section_popup_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
@@ -21,16 +24,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with RouteAware {
   final ScrollController _scrollController = ScrollController();
+  List<Section>? sections;
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    getSection();
     // Wait for the widget to mount, then fetch products
     Future.microtask(() {
       final provider = Provider.of<ProductProvider>(context, listen: false);
       provider.fetchProducts();
     });
+  }
+
+  void getSection() async {
+    final sectionsListResq = await SectionService().getSections();
+    sections = sectionsListResq.sections;
   }
 
   void _onScroll() {
@@ -88,24 +98,24 @@ class _HomePageState extends State<HomePage> with RouteAware {
             delegate: _SubAppBarDelegate(
               minHeight: 260,
               maxHeight: 260,
-              child: Container(
-                alignment: Alignment.centerLeft,
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  // color: Theme.of(context).primaryColor,
-                  image: DecorationImage(
-                    image: AssetImage('assets/images/mart_background.png'),
-                    fit: BoxFit.cover,
+              child: ClipRRect(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    // color: Theme.of(context).primaryColor,
+                    image: DecorationImage(
+                      image: AssetImage('assets/images/mart_background.png'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ),
-                child: Column(
-                  // mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildShelf(),
-                    _buildShelf(),
-                    _buildShelf(),
-                  ],
+                  child: Column(
+                    // mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (sections != null && sections!.isNotEmpty)
+          ...sections!.take(3).map((section) => _buildShelf(section)),                ],
+                  ),
                 ),
               ),
             ),
@@ -149,15 +159,16 @@ class _HomePageState extends State<HomePage> with RouteAware {
                             },
                           ),
                         ),
-                        user?.role == 'shop_owner' || user?.role == 'cashier' ?
-                        GestureDetector(
-                            onTap: () =>
-                                Navigator.pushNamed(context, pageProductForm),
-                            child: Icon(
-                              Icons.add_to_photos,
-                              size: 40,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ))
+                        user?.role == 'shop_owner' || user?.role == 'cashier'
+                            ? GestureDetector(
+                                onTap: () => Navigator.pushNamed(
+                                    context, pageProductForm),
+                                child: Icon(
+                                  Icons.add_to_photos,
+                                  size: 40,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
+                                ))
                             : SizedBox()
                       ],
                     ),
@@ -396,21 +407,24 @@ class _HomePageState extends State<HomePage> with RouteAware {
     );
   }
 
-  Widget _buildShelf() {
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: Offset(-20, -10),
-          ),
-        ],
-      ),
-      child: Image.asset(
-        'assets/images/shelf_no_background.png',
-        fit: BoxFit.fitHeight,
-        width: 150,
+  Widget _buildShelf(Section section) {
+    return GestureDetector(
+      onTap: () => showSectionPopup(context: context,sectionId: section.id),
+      child: Container(
+        decoration: BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: Offset(-20, -10),
+            ),
+          ],
+        ),
+        child: Image.asset(
+          'assets/images/shelf_no_background.png',
+          fit: BoxFit.fitHeight,
+          width: 150,
+        ),
       ),
     );
   }

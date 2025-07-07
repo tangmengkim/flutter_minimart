@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:ministore/dio/models/product_model.dart';
 import 'package:ministore/views/widgets/section_popup_widget.dart';
@@ -10,7 +11,7 @@ void showProductDetailBottomSheet({
   bool isUpdate = false,
 }) {
   int quantity = initialQty;
-
+  print("======product detail ${product.toJson()}");
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -44,12 +45,25 @@ void showProductDetailBottomSheet({
                   ),
                   Row(
                     children: [
-                      CircleAvatar(
-                        radius: 32,
-                        backgroundImage: product.imageUrl != null
-                            ? NetworkImage(product.imageUrl!)
-                            : const AssetImage('assets/images/product_icon.png')
-                                as ImageProvider,
+                      CachedNetworkImage(
+                        imageUrl: product.imageUrl!,
+                        placeholder: (context, url) => const SizedBox(
+                          width: 50,
+                          height: 50,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) => Image.asset(
+                          'assets/images/product_icon.png',
+                          // width: 80,
+                          // height: 80
+                        ),
+                        width: 70,
+                        height: 70,
+                        fit: BoxFit.cover,
                       ),
                       const SizedBox(width: 16),
                       Expanded(

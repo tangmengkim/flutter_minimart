@@ -64,8 +64,8 @@ class SectionDetail {
   final int position;
   @JsonKey(name: 'is_active')
   final bool isActive;
-  final List<Shelve> shelves;
-  final List<Product> products;
+  final List<Shelve>? shelves;
+  final List<Product>? products;
 
   SectionDetail({
     required this.id,
@@ -73,8 +73,8 @@ class SectionDetail {
     required this.description,
     required this.position,
     required this.isActive,
-    required this.shelves,
-    required this.products,
+    this.shelves,
+    this.products,
   });
 
   factory SectionDetail.fromJson(Map<String, dynamic> json) =>

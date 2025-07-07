@@ -5,9 +5,10 @@ import 'package:ministore/dio/services/section_service.dart';
 
 void showSectionPopup({
   required BuildContext context,
-  required Product currentProduct,
+  Product? currentProduct,
+  int? sectionId
 }) async {
-  final sectionId = currentProduct.section?.id;
+  sectionId = sectionId ?? currentProduct?.section?.id ;
   if (sectionId == null) return;
 
   // Fetch section detail (includes shelves and products)
@@ -17,8 +18,8 @@ void showSectionPopup({
 
   // Group products by shelf ID
   final productsByShelfId = <int, List<Product>>{};
-  for (var product in section.products) {
-    final shelfId = product.shelf?.id;
+  for (var product in section.products!) {
+    final shelfId = product.shelfId;
     if (shelfId != null) {
       productsByShelfId.putIfAbsent(shelfId, () => []).add(product);
     }
@@ -36,15 +37,15 @@ void showSectionPopup({
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Section: ${currentProduct.section?.name ?? "-"}',
+                'Section: ${currentProduct?.section?.name ?? section.name}',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
-              ...section.shelves.map((shelf) {
+              ...section.shelves!.map((shelf) {
                 final shelfProducts = productsByShelfId[shelf.id] ?? [];
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: 0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -54,13 +55,14 @@ void showSectionPopup({
                               fontWeight: FontWeight.bold,
                             ),
                       ),
-                      const SizedBox(height: 8),
+                      // const SizedBox(height: 8),
                       Container(
-                        height: 120,
+                        // width: 1,
+                        height: 145,
                         decoration: BoxDecoration(
                           image: const DecorationImage(
                             image: AssetImage('assets/images/shelf_row.png'),
-                            fit: BoxFit.cover,
+                            fit: BoxFit.fitWidth,
                           ),
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -77,17 +79,19 @@ void showSectionPopup({
                                 itemCount: shelfProducts.length,
                                 itemBuilder: (context, index) {
                                   final product = shelfProducts[index];
+                                  print("=========p ${product.id}");
+                                  print("=========cp ${currentProduct?.id}");
                                   final isCurrent =
-                                      product.id == currentProduct.id;
+                                      product.id == currentProduct?.id;
                                   final imageUrl = product.imageUrl ?? '';
 
                                   return Padding(
-                                    padding: const EdgeInsets.only(right: 8),
+                                    padding: const EdgeInsets.only(right: 18),
                                     child: SizedBox(
                                       width: 70,
                                       child: Column(
                                         mainAxisAlignment:
-                                            MainAxisAlignment.center,
+                                            MainAxisAlignment.start,
                                         children: [
                                           Stack(
                                             alignment: Alignment.topRight,
@@ -113,11 +117,12 @@ void showSectionPopup({
                                                         errorWidget: (context,
                                                                 url, error) =>
                                                             Image.asset(
-                                                                'assets/images/product_icon.png',
-                                                                width: 50,
-                                                                height: 50),
-                                                        width: 50,
-                                                        height: 50,
+                                                          'assets/images/product_icon.png',
+                                                          // width: 80,
+                                                          // height: 80
+                                                        ),
+                                                        width: 70,
+                                                        height: 70,
                                                         fit: BoxFit.cover,
                                                       )
                                                     : Image.asset(
@@ -128,6 +133,7 @@ void showSectionPopup({
                                               if (isCurrent)
                                                 const Icon(Icons.star,
                                                     color: Colors.amber,
+                                                    shadows: [Shadow(color: Colors.black,blurRadius: 6)],
                                                     size: 16),
                                             ],
                                           ),
