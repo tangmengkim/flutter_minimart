@@ -15,11 +15,11 @@ abstract class ShelvesService {
 
   // List shelves, optional section_id param
   @GET("/shelves")
-  Future<ShelfListResp> getShelves(@Query("section_id") String? sectionId);
+  Future<ShelvesListResp> getShelves(@Query("section_id") String? sectionId);
 
   // Get shelf details
   @GET("/shelves/{id}")
-  Future<Shelve> getShelfById(@Path("id") String id);
+  Future<ShelveResp> getShelveById(@Path("id") String id);
 
   // Create shelf
   @POST("/shelves")

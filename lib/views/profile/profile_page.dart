@@ -164,9 +164,8 @@ class _ProfilePageState extends State<ProfilePage> {
       await authProvider.logout();
       if (!mounted) return;
 
-      Navigator.of(context).pushNamedAndRemoveUntil(
+      Navigator.of(context).pushReplacementNamed(
         pageHome,
-        (Route<dynamic> route) => false,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(

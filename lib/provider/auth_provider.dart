@@ -84,7 +84,7 @@ class AuthProvider with ChangeNotifier {
       print("Login response: ${response}");
 
       if (response.success) {
-        print("Login successful");
+        print("Login successful");  
 
         // Save to storage
         await Data().put<LoginData>(DataKeys.userAuth, response.data);

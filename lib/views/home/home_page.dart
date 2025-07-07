@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:ministore/dio/models/product_model.dart';
 import 'package:ministore/main.dart';
+import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/provider/cart_provider.dart';
 import 'package:ministore/provider/product_provider.dart';
 import 'package:ministore/route_page.dart';
@@ -73,6 +74,8 @@ class _HomePageState extends State<HomePage> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = userProvider.currentUser;
     return Scaffold(
       body: CustomScrollView(
         controller: _scrollController,
@@ -146,6 +149,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                             },
                           ),
                         ),
+                        user?.role == 'shop_owner' || user?.role == 'cashier' ?
                         GestureDetector(
                             onTap: () =>
                                 Navigator.pushNamed(context, pageProductForm),
@@ -154,6 +158,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
                               size: 40,
                               color: Theme.of(context).colorScheme.secondary,
                             ))
+                            : SizedBox()
                       ],
                     ),
                   ),
@@ -292,7 +297,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
               arguments: product,
             ),
             backgroundColor: Colors.transparent,
-            foregroundColor: Colors.black,
+            foregroundColor: Theme.of(context).iconTheme.color,
             icon: Icons.edit,
             label: 'Edit',
           ),
@@ -332,7 +337,7 @@ class _HomePageState extends State<HomePage> with RouteAware {
               }
             },
             backgroundColor: Colors.transparent,
-            foregroundColor: Colors.black,
+            foregroundColor: Theme.of(context).iconTheme.color,
             icon: Icons.delete,
             label: 'Delete',
           ),

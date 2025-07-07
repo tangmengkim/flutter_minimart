@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ministore/dio/models/cart_item_model.dart';
+import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/provider/cart_provider.dart';
 import 'package:ministore/route_page.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,8 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final userProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = userProvider.currentUser;
 
     return Scaffold(
       appBar: AppBar(title: Text('Cart')),
@@ -22,12 +25,28 @@ class CartPage extends StatelessWidget {
               itemBuilder: (_, index) {
                 final item = cart.items[index];
                 return ListTile(
-                  title: Text(item.product.name),
-                  subtitle: Text('Qty: ${item.quantity}'),
-                  trailing: Text(
-                    '\$${(double.tryParse(item.product.price as String) ?? 0) * item.quantity}',
-                  ),
-                  onTap: () {
+  title: Text(item.product.name),
+  subtitle: Text('Qty: ${item.quantity}'),
+  trailing: Row(
+    mainAxisSize: MainAxisSize.min,
+    spacing: 5,
+    children: [
+      
+      Text(
+        '\$${(double.tryParse(item.product.price as String) ?? 0) * item.quantity}',
+      ),
+      IconButton(
+        icon: Icon(Icons.delete, color: Colors.red),
+        onPressed: () {
+          context.read<CartProvider>().removeFromCart(item.product);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${item.product.name} removed from cart')),
+          );
+        },
+      ),
+    ],
+  ),
+  onTap: () {
                     showModalBottomSheet(
                       context: context,
                       builder: (context) {
@@ -43,19 +62,20 @@ class CartPage extends StatelessWidget {
             ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ElevatedButton(
+        child: user?.role == 'shop_owner' || user?.role == 'cashier' ?
+         ElevatedButton(
           onPressed: () {
-            if (userRole == 'customer' || userRole == 'cashier') {
+            if (user?.role == 'shop_owner' || user?.role == 'cashier') {
               Navigator.pushNamed(context, pageCheckout, arguments: userRole);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                    content: Text('Only customers or cashiers can checkout.')),
+                    content: Text('Only Owner or cashiers can checkout.')),
               );
             }
           },
           child: Text('Checkout (\$${cart.total})'),
-        ),
+        ) : SizedBox(),
       ),
     );
   }

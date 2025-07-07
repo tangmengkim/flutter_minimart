@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ministore/dio/models/product_model.dart';
-import 'package:ministore/dio/services/product_service.dart';
-import 'package:ministore/dio/services/shelves_service.dart';
-import 'package:ministore/views/widgets/shelf_popup_widget.dart';
+import 'package:ministore/views/widgets/section_popup_widget.dart';
 
 void showProductDetailBottomSheet({
   required BuildContext context,
@@ -24,6 +22,9 @@ void showProductDetailBottomSheet({
         padding: MediaQuery.of(context).viewInsets,
         child: StatefulBuilder(
           builder: (context, setState) {
+            final isOut = product.isOutOfStock == true;
+            final isLow = product.isLowStock == true;
+
             return Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -63,42 +64,86 @@ void showProductDetailBottomSheet({
                                     .textTheme
                                     .titleMedium
                                     ?.copyWith(color: Colors.green)),
+                            if (product.barcode != null)
+                              Text("Barcode: ${product.barcode}",
+                                  style: Theme.of(context).textTheme.bodySmall),
                           ],
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(product.description ?? 'No description'),
+                  if (product.description?.isNotEmpty == true)
+                    Text(product.description!)
+                  else
+                    const Text("No description available"),
                   const SizedBox(height: 12),
+
+                  /// Stock info
                   Row(
-  children: [
-    Icon(Icons.location_on, size: 20, color: Colors.grey),
-    const SizedBox(width: 4),
-    GestureDetector(
-      onTap: () async {
-        final shelfProducts = await ShelvesService().getShelfById(
-          product.section?.id.toString() ?? '',
-        );
+                    children: [
+                      Icon(Icons.inventory_2, size: 20, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Stock: ${product.stockQuantity} (Min: ${product.minStockLevel})',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 8),
+                      if (isLow)
+                        const Chip(
+                          label: Text("Low Stock"),
+                          backgroundColor: Colors.orange,
+                          visualDensity: VisualDensity.compact,
+                          labelStyle: TextStyle(color: Colors.white),
+                        ),
+                      if (isOut)
+                        const Chip(
+                          label: Text("Out of Stock"),
+                          backgroundColor: Colors.red,
+                          visualDensity: VisualDensity.compact,
+                          labelStyle: TextStyle(color: Colors.white),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
 
-        showShelfPopup(
-          context: context,
-          currentProduct: product,
-          shelfProducts: shelfProducts.products
-        );
-      },
-      child: Text(
-        '${product.section?.name ?? "Unknown Section"} > ${product.shelf?.name ?? "Unknown Shelf"}',
-        style: TextStyle(
-          color: Colors.blue.shade600,
-          decoration: TextDecoration.underline,
-        ),
-      ),
-    ),
-  ],
-),
+                  /// Category + Location
+                  if (product.category != null)
+                    Row(
+                      children: [
+                        Icon(Icons.category, size: 20, color: Colors.grey),
+                        const SizedBox(width: 4),
+                        Text(product.category!.name,
+                            style: Theme.of(context).textTheme.bodyMedium),
+                      ],
+                    ),
+                  const SizedBox(height: 8),
 
+                  /// Location clickable
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, size: 20, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      GestureDetector(
+                        onTap: () async {
+                          showSectionPopup(
+                            context: context,
+                            currentProduct: product,
+                          );
+                        },
+                        child: Text(
+                          '${product.section?.name ?? "Unknown Section"} > ${product.shelf?.name ?? "Unknown Shelf"}',
+                          style: TextStyle(
+                            color: Colors.blue.shade600,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 20),
+
+                  /// Quantity picker
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -127,6 +172,8 @@ void showProductDetailBottomSheet({
                     ],
                   ),
                   const SizedBox(height: 24),
+
+                  /// Action button
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(

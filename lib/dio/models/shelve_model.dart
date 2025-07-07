@@ -21,6 +21,8 @@ class Shelve {
   @JsonKey(name: 'deleted_at')
   final String? deletedAt;
   final Section section;
+  
+  @JsonKey(defaultValue: [])
   final List<Product> products;
 
   Shelve({
@@ -39,4 +41,38 @@ class Shelve {
 
   factory Shelve.fromJson(Map<String, dynamic> json) => _$ShelveFromJson(json);
   Map<String, dynamic> toJson() => _$ShelveToJson(this);
+}
+
+
+@JsonSerializable()
+class ShelveResp {
+  @JsonKey(name: "success")
+  final bool isSuccess;
+
+  @JsonKey(name: "data")
+  final Shelve shelfs;
+
+  ShelveResp({required this.isSuccess, required this.shelfs});
+
+  factory ShelveResp.fromJson(Map<String, dynamic> json) =>
+      _$ShelveRespFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ShelveRespToJson(this);
+}
+
+
+@JsonSerializable()
+class ShelvesListResp {
+  @JsonKey(name: "success")
+  final bool isSuccess;
+
+  @JsonKey(name: "data")
+  final List<Shelve> shelfs;
+
+  ShelvesListResp({required this.isSuccess, required this.shelfs});
+
+  factory ShelvesListResp.fromJson(Map<String, dynamic> json) =>
+      _$ShelvesListRespFromJson(json);
+
+  Map<String, dynamic> toJson() => _$ShelvesListRespToJson(this);
 }

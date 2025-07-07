@@ -17,7 +17,7 @@ abstract class SectionService {
   Future<SectionListResp> getSections();
 
   @GET("/sections/{id}")
-  Future<Section> getSectionById(@Path("id") String id);
+  Future<SectionDetailResp> getSectionById(@Path("id") String id);
 
   @POST("/sections")
   Future<Section> createSection(@Body() Map<String, dynamic> body);

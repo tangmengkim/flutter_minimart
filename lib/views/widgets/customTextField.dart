@@ -64,36 +64,33 @@ class CustomTextField extends StatelessWidget {
         style: theme.textTheme.bodyMedium,
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: labelStyle ?? theme.textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w500,
-            color: enabled ? Colors.grey.shade800 : Colors.grey,
-          ),
+          // labelStyle: labelStyle ?? theme.inputDecorationTheme.labelStyle,
           hintText: hintText,
           prefixIcon: prefixIcon,
           suffixIcon: suffixIcon,
           contentPadding: contentPadding ??
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           filled: true,
-          fillColor: enabled ? Colors.white : Colors.grey.shade100,
-          border: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: Colors.grey.shade300),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(
-              color: theme.colorScheme.secondary,
-              width: 1.4,
-            ),
-          ),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: borderRadius,
-            borderSide: BorderSide(color: Colors.grey.shade200),
-          ),
+          // fillColor: enabled ? Colors.white : Colors.grey.shade100,
+          // border: OutlineInputBorder(
+          //   borderRadius: borderRadius,
+          //   borderSide: BorderSide(color: Colors.grey.shade300),
+          // ),
+          // enabledBorder: OutlineInputBorder(
+          //   borderRadius: borderRadius,
+          //   borderSide: BorderSide(color: Colors.grey.shade300),
+          // ),
+          // focusedBorder: OutlineInputBorder(
+          //   borderRadius: borderRadius,
+          //   borderSide: BorderSide(
+          //     color: theme.colorScheme.secondary,
+          //     width: 1.4,
+          //   ),
+          // ),
+          // disabledBorder: OutlineInputBorder(
+          //   borderRadius: borderRadius,
+          //   borderSide: BorderSide(color: Colors.grey.shade200),
+          // ),
         ),
       ),
     );

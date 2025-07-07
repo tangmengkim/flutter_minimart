@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ministore/dio/models/shelve_model.dart';
 import 'package:ministore/provider/product_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:ministore/dio/models/product_model.dart';
@@ -40,7 +41,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   // Data lists
   List<Category> categories = [];
   List<Section> sections = [];
-  List<Shelf> shelves = [];
+  List<Shelve> shelves = [];
 
   final categoryService = CategoryService();
   final sectionService = SectionService();

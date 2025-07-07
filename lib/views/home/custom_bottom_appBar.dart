@@ -20,6 +20,8 @@ class CustomBottomAppBar extends StatelessWidget {
       removeMargins: true,
       notchBottomBarController: notchBottomBarController,
       bottomBarItems: bottomBarItems,
+      color: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary,
+      notchColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).colorScheme.primary,
       onTap: (int index) {
         if (onTabSelected != null) {
           onTabSelected!(index);

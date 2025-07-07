@@ -1,10 +1,12 @@
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:ministore/dio/models/auth_model.dart';
+import 'package:ministore/provider/auth_provider.dart';
 import 'package:ministore/views/home/cart_page.dart';
 import 'package:ministore/views/home/custom_bottom_appBar.dart';
 import 'package:ministore/views/home/home_page.dart';
 import 'package:ministore/views/profile/profile_page.dart';
+import 'package:provider/provider.dart';
 
 class PageViewController extends StatefulWidget {
   const PageViewController({Key? key}) : super(key: key);
@@ -17,6 +19,7 @@ class _PageViewControllerState extends State<PageViewController> {
   final PageController _pageController = PageController();
   final NotchBottomBarController _controller = NotchBottomBarController();
   User? user;
+  String? role;
 
   int _currentPage = 0;
 
@@ -36,6 +39,13 @@ class _PageViewControllerState extends State<PageViewController> {
 
   void _onPageChanged(int index) {
     setState(() {
+      final userProvider = Provider.of<AuthProvider>(context, listen: false);
+      user = userProvider.currentUser;
+      role =
+          (user?.role == 'shop_owner' || user?.role == 'cashier')
+              ? 'Sell'
+              : 'Cart';
+
       _currentPage = index;
       // _controller.jumpTo(_currentPage);
     });
@@ -51,6 +61,14 @@ class _PageViewControllerState extends State<PageViewController> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<AuthProvider>(context, listen: false);
+    final user = userProvider.currentUser;
+
+    final String cartLabel =
+        (user?.role == 'shop_owner' || user?.role == 'cashier')
+            ? 'Sell'
+            : 'Cart';
+
     return Scaffold(
       body: Column(
         children: [
@@ -67,19 +85,19 @@ class _PageViewControllerState extends State<PageViewController> {
       bottomNavigationBar: CustomBottomAppBar(
         notchBottomBarController: _controller,
         bottomBarItems: [
-          const BottomBarItem(
-            inActiveItem: Icon(Icons.home, color: Colors.blueGrey),
-            activeItem: Icon(Icons.home, color: Colors.blue),
+          BottomBarItem(
+            inActiveItem: Icon(Icons.home, color: Theme.of(context).iconTheme.color),
+            activeItem: Icon(Icons.home, color:Theme.of(context).iconTheme.color),
             itemLabel: 'Home',
           ),
-          const BottomBarItem(
-            inActiveItem: Icon(Icons.shopping_cart, color: Colors.blueGrey),
-            activeItem: Icon(Icons.shopping_cart, color: Colors.blue),
+          BottomBarItem(
+            inActiveItem: Icon(Icons.shopping_cart, color:Theme.of(context).iconTheme.color),
+            activeItem: Icon(Icons.shopping_cart, color: Theme.of(context).iconTheme.color),
             itemLabel: 'Cart',
           ),
-          const BottomBarItem(
-            inActiveItem: Icon(Icons.person, color: Colors.blueGrey),
-            activeItem: Icon(Icons.person, color: Colors.blue),
+          BottomBarItem(
+            inActiveItem: Icon(Icons.person, color: Theme.of(context).iconTheme.color),
+            activeItem: Icon(Icons.person, color:Theme.of(context).iconTheme.color),
             itemLabel: 'Profile',
           ),
         ],
